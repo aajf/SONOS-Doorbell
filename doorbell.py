@@ -12,13 +12,6 @@ import soco
 from soco import SoCo
 from soco.snapshot import Snapshot
 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-
-from elasticsearch import Elasticsearch
-
 #RaspberryPI pin setup
 GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
 GPIO.setup(23, GPIO.IN)
