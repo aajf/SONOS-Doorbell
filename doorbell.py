@@ -69,7 +69,6 @@ def sonos_bell():
 
    # play the doorbell sound
    # MP3 shared in local network
-   #sonos_zone.play_uri('x-file-cifs://192.168.2.15/Sonos/1.mp3')
    sonosbell.play_uri('http://192.168.0.116/doorbell.mp3')
    
    # give sonos time to start playing doorbell sound
