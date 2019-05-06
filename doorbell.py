@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 
 
 # Doorbell - Using doorbell relais to trigger SONOS doorbell
@@ -24,11 +24,11 @@ def init_sonos():
    try:
       opts, args = getopt.getopt(sys.argv[1:], "h:s:v:l")
    except getopt.GetoptError:
-      print "doorbell.py -s <sonosname>"
+      print ("doorbell.py -s <sonosname>")
       sys.exit(2)
    for opt, arg in opts:
       if opt == "-h":
-         print "doorbell.py -s <sonosname> -v <volume>"
+         print ("doorbell.py -s <sonosname> -v <volume>")
          sys.exit()
       elif opt == "-s":
          sonosname = arg
@@ -37,10 +37,10 @@ def init_sonos():
       elif opt == "-l":
          for device in soco.discover():
             sonosbell = SoCo(str(device.ip_address))
-            print "** Sonos device " + device.player_name + " found at " + device.ip_address
+            print ("** Sonos device " + device.player_name + " found at " + device.ip_address)
          sys.exit()
       else:
-         print "doorbell.py -s <sonosname>"
+         print ("doorbell.py -s <sonosname>")
          sys.exit(2)
          
    #print sonosname
@@ -48,7 +48,7 @@ def init_sonos():
    for device in soco.discover():
       if device.player_name == sonosname:
          sonosbell = SoCo(str(device.ip_address))
-         print "** Sonos device " + device.player_name + " found at " + device.ip_address
+         print ("** Sonos device " + device.player_name + " found at " + device.ip_address)
 
    
    return
