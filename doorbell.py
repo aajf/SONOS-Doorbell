@@ -5,71 +5,59 @@
 # Author: Ive Mees
 #
 
-import sys, getopt
+import config
+import sys
 import time
+import datetime
 import RPi.GPIO as GPIO ## Import GPIO library
 import soco
 from soco import SoCo
 from soco.snapshot import Snapshot
+import urllib 
+import requests
+from fbchat import Client
+from fbchat.models import *
 
-#RaspberryPI pin setup
-GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
-GPIO.setup(23, GPIO.IN)
+def init_raspberry():
+      #RaspberryPI pin setup
+      GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
+      GPIO.setup(config.RASPBERRY['gpio_setup_pin'],GPIO.IN)
+   return
 
 def init_sonos():
 
-   global sonosbell
-   global sonos_bell_volume
+   global sonos
 
-   try:
-      opts, args = getopt.getopt(sys.argv[1:], "h:s:v:l")
-   except getopt.GetoptError:
-      print ("doorbell.py -s <sonosname>")
-      sys.exit(2)
-   for opt, arg in opts:
-      if opt == "-h":
-         print ("doorbell.py -s <sonosname> -v <volume>")
-         sys.exit()
-      elif opt == "-s":
-         sonosname = arg
-      elif opt == "-v":
-         sonos_bell_volume = arg
-      elif opt == "-l":
-         for device in soco.discover():
-            sonosbell = SoCo(str(device.ip_address))
-            print ("** Sonos device " + device.player_name + " found at " + device.ip_address)
-         sys.exit()
-      else:
-         print ("doorbell.py -s <sonosname>")
-         sys.exit(2)
-         
-   #print sonosname
-   
+   #check if the configured sonos is available
+   sonos_found = 'no'
    for device in soco.discover():
-      if device.player_name == sonosname:
-         sonosbell = SoCo(str(device.ip_address))
-         print ("** Sonos device " + device.player_name + " found at " + device.ip_address)
+      if device.playername == config.SONOS['sonos_name']:
+        sonos_found = 'yes'
+        sonos = SoCo(str(device.ip_address))
 
+   if sonos_found == 'no':
+      print ("** Sonos not found with name " + config.SONOS['sonos_name'] + " => please check the config." )
+      print ("** Sonos available: ")
+      for device in soco.discover():
+         print ("** Sonos device " + device.player_name + " found at " + device.ip_address)
+         sys.exit()
    
    return
 
 
 def sonos_bell():
-   global sonosname
-   global sonosbell
-   global sonos_bell_volume
-   play_reset = "no"
+   global sonos
    
    # take snapshot of selected sonos zone
-   snap = Snapshot(sonosbell)
+   snap = Snapshot(sonos)
    snap.snapshot()
 
    # set doorbell play volume
-   sonosbell.volume = sonos_bell_volume
+   sonos.volume = config.SONOS['doorbell_volume']
 
    # play the doorbell sound
    # MP3 shared in local network
-   sonosbell.play_uri('http://192.168.0.116/doorbell.mp3')
+   sonosbell.play_uri(config.SONOS['uri'])
    
    # give sonos time to start playing doorbell sound
    time.sleep(1)
@@ -83,22 +71,45 @@ def sonos_bell():
    
    return
 
+def get_ipcamera_picture():
+   manager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+   manager.add_password(None, config.IPCAMERA['baseurl'], config.IPCAMERA['username'], config.IPCAMERA['password'])
+   auth = urllib.request.HTTPBasicAuthHandler(manager)
+
+   opener = urllib.request.build_opener(auth)
+   urllib.request.install_opener(opener)
+
+   #response = urllib.request.urlopen(baseurl + "/image/jpeg.cgi")
+   response = urllib.request.urlretrieve(config.IPCAMERA['baseurl'] + config.IPCAMERA['image_path'], config.IPCAMERA['temp_image_path'])
+   
+   return
+
+def send_picture_fbchat():
+
+   client = Client(config.FB['username'], config.FB['password'])
+   client.sendLocalImage(config.IPCAMERA['temp_image_path'], message=Message(text='Er is iemand aan de deur!'), thread_id=client.uid, thread_type=ThreadType.USER)
+   
+   return
+
 #
 #   main program 
 #
 
+init_raspberry()
 init_sonos()
 
+
 while True:
-        input_value = GPIO.input(23)
+        input_value = GPIO.input(config.RASPBERRY['gpio_setup_pin'])
         time.sleep(0.1)
-	#test doorbell => put value to 1
+	      #test doorbell => put value to 1
         #input_value = 1        
         if input_value == 1:
-           #print "There is someone at the door"
+           get_ipcamera_picture()
            sonos_bell()
+           send_picture_fbchat()
            time.sleep(2)
-
+           #exits after one execution
+           #break
 
 GPIO.cleanup()
-
