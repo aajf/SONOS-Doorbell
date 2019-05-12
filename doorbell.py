@@ -19,9 +19,9 @@ from fbchat import Client
 from fbchat.models import *
 
 def init_raspberry():
-      #RaspberryPI pin setup
-      GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
-      GPIO.setup(config.RASPBERRY['gpio_setup_pin'],GPIO.IN)
+   #RaspberryPI pin setup
+   GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
+   GPIO.setup(config.RASPBERRY['gpio_setup_pin'],GPIO.IN)
    return
 
 def init_sonos():
@@ -31,7 +31,7 @@ def init_sonos():
    #check if the configured sonos is available
    sonos_found = 'no'
    for device in soco.discover():
-      if device.playername == config.SONOS['sonos_name']:
+      if device.player_name == config.SONOS['sonos_name']:
         sonos_found = 'yes'
         sonos = SoCo(str(device.ip_address))
 
@@ -57,13 +57,13 @@ def sonos_bell():
 
    # play the doorbell sound
    # MP3 shared in local network
-   sonosbell.play_uri(config.SONOS['uri'])
+   sonos.play_uri(config.SONOS['uri'])
    
    # give sonos time to start playing doorbell sound
    time.sleep(1)
 
    # wait for door bell sound to be finished playing
-   while str(sonosbell.get_current_transport_info()[u'current_transport_state']) == "PLAYING":
+   while str(sonos.get_current_transport_info()[u'current_transport_state']) == "PLAYING":
       time.sleep(0.1)
 
    # restore state of selected sonos zone with fade = True
