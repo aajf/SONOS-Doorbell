@@ -17,6 +17,7 @@ import urllib
 import requests
 from fbchat import Client
 from fbchat.models import *
+from notify_run import Notify
 
 def init_raspberry():
    #RaspberryPI pin setup
@@ -91,6 +92,10 @@ def send_picture_fbchat():
    
    return
 
+def send_notify():
+   notify = Notify()
+   notify.send("Er staat iemand aan de deur!")
+   return
 #
 #   main program 
 #
@@ -107,6 +112,7 @@ while True:
         if input_value == 1:
            get_ipcamera_picture()
            sonos_bell()
+           send_notify()
            send_picture_fbchat()
            time.sleep(2)
            #exits after one execution
